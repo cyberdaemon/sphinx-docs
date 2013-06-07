@@ -39,7 +39,7 @@
              in entries %}
      <tr{% if grouptype == 2 %} class="cg-{{ groupid.current() }}"{% endif %}>
        <td>{% if grouptype == 1 -%}
-         <img src="{{ pathto('_static/minus.png', 1) }}" class="toggler"
+         <img src="{{ pathto('static/minus.png', 1) }}" class="toggler"
               id="toggle-{{ groupid.next() }}" style="display: none" alt="-" />
            {%- endif %}</td>
        <td>{% if grouptype == 2 %}&nbsp;&nbsp;&nbsp;{% endif %}
