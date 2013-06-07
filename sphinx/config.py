@@ -207,6 +207,10 @@ class Config(object):
 
         # XML options
         xml_pretty = (True, 'env'),
+
+        # html output directories
+        html_static_output_dir = 'static',
+        html_source_output_dir = 'source'
     )
 
     def __init__(self, dirname, filename, overrides, tags):

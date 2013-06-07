@@ -84,9 +84,6 @@ class StandaloneHTMLBuilder(Builder):
     add_permalinks = True
     embedded = False  # for things like HTML help or Qt help: suppresses sidebar
 
-    # This is a class attribute because it is mutated by Sphinx.add_javascript.
-    script_files = ['static/jquery.js', 'static/underscore.js',
-                    'static/doctools.js']
     # Dito for this one.
     css_files = []
 
@@ -97,7 +94,6 @@ class StandaloneHTMLBuilder(Builder):
     _publisher = None
 
     def init(self):
-        print "I ran! Whoo!"
         # a hash of all config values that, if changed, cause a full rebuild
         self.config_hash = ''
         self.tags_hash = ''
@@ -120,6 +116,13 @@ class StandaloneHTMLBuilder(Builder):
         if self.config.language is not None:
             if self._get_translations_js():
                 self.script_files.append('static/translations.js')
+
+        # This is a class attribute because it is mutated by Sphinx.add_javascript.
+        self.script_files = []
+        for lib in ['jquery.js', 'underscore.js', 'doctools.js']:
+            lib_dir = '/'.join([self.config.html_static_output_dir, lib])
+            self.script_files.append(lib_dir)
+            
 
     def _get_translations_js(self):
         candidates = [path.join(package_dir, 'locale', self.config.language,
@@ -472,7 +475,7 @@ class StandaloneHTMLBuilder(Builder):
 
         if self.config.html_use_opensearch and self.name != 'htmlhelp':
             self.info(' opensearch', nonl=1)
-            fn = path.join(self.outdir, 'static', 'opensearch.xml')
+            fn = path.join(self.outdir, self.config.html_static_output_dir, 'opensearch.xml')
             self.handle_page('opensearch', {}, 'opensearch.xml', outfilename=fn)
 
         self.info()
@@ -556,16 +559,16 @@ class StandaloneHTMLBuilder(Builder):
     def copy_static_files(self):
         # copy static files
         self.info(bold('copying static files... '), nonl=True)
-        ensuredir(path.join(self.outdir, 'static'))
+        ensuredir(path.join(self.outdir, self.config.html_static_output_dir))
         # first, create pygments style file
-        f = open(path.join(self.outdir, 'static', 'pygments.css'), 'w')
+        f = open(path.join(self.outdir, self.config.html_static_output_dir, 'pygments.css'), 'w')
         f.write(self.highlighter.get_stylesheet())
         f.close()
         # then, copy translations JavaScript file
         if self.config.language is not None:
             jsfile = self._get_translations_js()
             if jsfile:
-                copyfile(jsfile, path.join(self.outdir, 'static',
+                copyfile(jsfile, path.join(self.outdir, self.config.html_static_output_dir,
                                            'translations.js'))
 
         # add context items for search function used in searchtools.js_t
@@ -574,10 +577,10 @@ class StandaloneHTMLBuilder(Builder):
 
         # then, copy over theme-supplied static files
         if self.theme:
-            themeentries = [path.join(themepath, 'static')
+            themeentries = [path.join(themepath, self.config.html_static_output_dir)
                             for themepath in self.theme.get_dirchain()[::-1]]
             for entry in themeentries:
-                copy_static_entry(entry, path.join(self.outdir, 'static'),
+                copy_static_entry(entry, path.join(self.outdir, self.config.html_static_output_dir),
                                   self, ctx)
         # then, copy over all user-supplied static files
         staticentries = [path.join(self.confdir, spath)
@@ -590,18 +593,18 @@ class StandaloneHTMLBuilder(Builder):
             if not path.exists(entry):
                 self.warn('html_static_path entry %r does not exist' % entry)
                 continue
-            copy_static_entry(entry, path.join(self.outdir, 'static'), self,
+            copy_static_entry(entry, path.join(self.outdir, self.config.html_static_output_dir), self,
                               ctx, exclude_matchers=matchers)
         # copy logo and favicon files if not already in static path
         if self.config.html_logo:
             logobase = path.basename(self.config.html_logo)
-            logotarget = path.join(self.outdir, 'static', logobase)
+            logotarget = path.join(self.outdir, self.config.html_static_output_dir, logobase)
             if not path.isfile(logotarget):
                 copyfile(path.join(self.confdir, self.config.html_logo),
                          logotarget)
         if self.config.html_favicon:
             iconbase = path.basename(self.config.html_favicon)
-            icontarget = path.join(self.outdir, 'static', iconbase)
+            icontarget = path.join(self.outdir, self.config.html_static_output_dir, iconbase)
             if not path.isfile(icontarget):
                 copyfile(path.join(self.confdir, self.config.html_favicon),
                          icontarget)
@@ -769,7 +772,7 @@ class StandaloneHTMLBuilder(Builder):
             self.warn("error writing file %s: %s" % (outfilename, err))
         if self.copysource and ctx.get('sourcename'):
             # copy the source file for the "show source" link
-            source_name = path.join(self.outdir, 'sources',
+            source_name = path.join(self.outdir, self.config.html_source_output_dir,
                                     os_path(ctx['sourcename']))
             ensuredir(path.dirname(source_name))
             copyfile(self.env.doc2path(pagename), source_name)
@@ -954,7 +957,7 @@ class SingleFileHTMLBuilder(StandaloneHTMLBuilder):
 
         if self.config.html_use_opensearch:
             self.info(' opensearch', nonl=1)
-            fn = path.join(self.outdir, 'static', 'opensearch.xml')
+            fn = path.join(self.outdir, self.config.html_static_output_dir, 'opensearch.xml')
             self.handle_page('opensearch', {}, 'opensearch.xml', outfilename=fn)
 
         self.info()
@@ -1027,7 +1030,7 @@ class SerializingHTMLBuilder(StandaloneHTMLBuilder):
         # if there is a source file, copy the source file for the
         # "show source" link
         if ctx.get('sourcename'):
-            source_name = path.join(self.outdir, 'sources',
+            source_name = path.join(self.outdir, self.config.html_source_output_dir,
                                     os_path(ctx['sourcename']))
             ensuredir(path.dirname(source_name))
             copyfile(self.env.doc2path(pagename), source_name)
