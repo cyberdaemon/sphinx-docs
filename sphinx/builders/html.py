@@ -93,6 +93,9 @@ class StandaloneHTMLBuilder(Builder):
     # cached publisher object for snippets
     _publisher = None
 
+    # This is a class attribute because it is mutated by Sphinx.add_javascript.
+    script_files = []
+
     def init(self):
         # a hash of all config values that, if changed, cause a full rebuild
         self.config_hash = ''
@@ -117,7 +120,6 @@ class StandaloneHTMLBuilder(Builder):
             if self._get_translations_js():
                 self.script_files.append('static/translations.js')
 
-        # This is a class attribute because it is mutated by Sphinx.add_javascript.
         self.script_files = []
         for lib in ['jquery.js', 'underscore.js', 'doctools.js']:
             lib_dir = '/'.join([self.config.html_static_output_dir, lib])
